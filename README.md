@@ -26,7 +26,7 @@ MICROSOFT_CLIENT_SECRET=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 PLUGIN=genmon
 ```
 
-Install `pm2` to daemonize the script `npm install pm2 -g`.
+Install `pm2` to daemonize the script `npm install pm2 -g`. Set it up as a service `pm2 startup` and follow directions.
 
 Finally, you can daemonize one of the scripts with `pm2 spotify.js && pm2 save` or `node outlook.js && pm2 save`.
 
