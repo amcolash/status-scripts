@@ -1,12 +1,13 @@
 const fs = require('fs');
+const path = require('path');
 const querystring = require('querystring');
 const axios = require('axios');
 const express = require('express');
 const FileStore = require('fs-store').FileStore;
 const moment = require('moment');
 
-require('dotenv').config();
-const store = new FileStore('data.json');
+require('dotenv').config({path: path.resolve(__dirname, '.env')});
+const store = new FileStore(path.resolve(__dirname, 'data.json'));
 
 const CLIENT_ID = process.env.MICROSOFT_CLIENT_ID;
 const CLIENT_SECRET = process.env.MICROSOFT_CLIENT_SECRET;
@@ -194,7 +195,7 @@ function updatePlugin(info, data) {
         // Fix issues with & character
         file = file.replace(/&/g,'+');
 
-        fs.writeFileSync('./outlook', file);
+        fs.writeFileSync(path.resolve(__dirname, 'outlook'), file);
         break;
       default:
         console.log(info);
