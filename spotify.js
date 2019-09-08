@@ -137,6 +137,7 @@ function updatePlugin(info, data) {
         break;
       default:
         console.log(info);
+        fs.writeFileSync(path.resolve(__dirname, 'outlook'), file);
         break;
     }
   } catch (err) {
