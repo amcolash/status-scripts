@@ -63,5 +63,6 @@ typings/
 # data store
 data.json
 
-# now playing info
-info
+# data files
+spotify
+outlook

@@ -127,7 +127,7 @@ function updatePlugin(info, data) {
         // Fix issues with & character
         file = file.replace(/&/g,'+');
 
-        fs.writeFileSync('./info', file);
+        fs.writeFileSync('./spotify', file);
         break;
       default:
         console.log(info);

@@ -104,13 +104,14 @@ function getEvents(res) {
       const data = {
         startdatetime: startWeek.format(),
         enddatetime: endWeek.format(),
-        $top: 50 // 50 items per page
+        $top: 50, // 50 items per page
       };
 
       let p = response.data.value.map(calendar => {
         return axios.get(`https://graph.microsoft.com/v1.0/me/calendars/${calendar.id}/calendarview?` + querystring.stringify(data), {
           headers: {
-            Authorization: 'Bearer ' + ACCESS
+            Authorization: 'Bearer ' + ACCESS,
+            Prefer: 'outlook.timezone="Pacific Standard Time"'
           }
         });
       });
@@ -121,18 +122,19 @@ function getEvents(res) {
           c.data.value.forEach(e => {
             events.push({
               ...e,
-              start: moment.utc(e.start.dateTime),
-              end: moment.utc(e.end.dateTime)
+              start: moment(e.start.dateTime),
+              end: moment(e.end.dateTime)
             });
           });
         });
 
-        // Sort
+        // Sort and filter results
         events = events.sort((a, b) => {
           return a.start - b.start
         }).filter(e => e.showAs === 'busy');
 
-        events.forEach(e => console.log(e.subject));
+        const info = events[0].subject + ' - ' + events[0].start.calendar()
+        updatePlugin(info, events);
       }).catch(err => {
         if (ERRORS) console.error(err.response);
         const info = 'Couldn\'t get upcoming events';
@@ -154,23 +156,20 @@ function getEvents(res) {
 
 function updatePlugin(info, data) {
   console.log(info);
-  return;
 
   try {
     switch (PLUGIN) {
       case 'genmon':
         let file;
-        if (data && data.is_playing) {
-          file = `<img>${__dirname}/icons/spotify.png</img><txt> ${info}</txt><tool>Spotify playing on ${data.device.name}\n${info}</tool>`;
-        } else if (data) {
-          file = `<img>${__dirname}/icons/spotify_disabled.png</img><txt> </txt><tool>Nothing Currently Playing</tool>`;
+        if (data) {
+          file = `<img>${__dirname}/icons/calendar.png</img><txt> ${info}</txt><tool>${data}</tool>`;
         } else {
           file = info;
         }
         // Fix issues with & character
         file = file.replace(/&/g,'+');
 
-        fs.writeFileSync('./info', file);
+        fs.writeFileSync('./outlook', file);
         break;
       default:
         console.log(info);
