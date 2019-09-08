@@ -171,8 +171,6 @@ function getEvents(res) {
 }
 
 function updatePlugin(info, data) {
-  console.log(info);
-
   try {
     switch (PLUGIN) {
       case 'genmon':

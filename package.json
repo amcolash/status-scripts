@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "description": "Scripts to provide status of various things in a terminal output, good for i3/genmon",
   "scripts": {
-    "spotify": "node spotify.js"
+    "spotify": "node spotify.js",
+    "outlook": "node outlook.js",
+    "start": "concurrently 'node spotify.js' 'node outlook.js'"
   },
   "repository": {
     "type": "git",
@@ -23,6 +25,7 @@
   "homepage": "https://github.com/amcolash/status-scripts#readme",
   "dependencies": {
     "axios": "^0.19.0",
+    "concurrently": "^4.1.2",
     "dotenv": "^8.1.0",
     "express": "^4.17.1",
     "fs-store": "^0.3.1",
