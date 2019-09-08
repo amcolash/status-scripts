@@ -10,14 +10,16 @@ const store = new FileStore('data.json');
 const CLIENT_ID = process.env.SPOTIFY_CLIENT_ID;
 const CLIENT_SECRET = process.env.SPOTIFY_CLIENT_SECRET;
 const PLUGIN = process.env.PLUGIN;
-const REDIRECT = 'http://localhost:8888/callback';
+const PORT = process.env.PORT || 8888;
+const REDIRECT = `http://localhost:${PORT}/callback`;
 const ERRORS = false;
 
 const app = express();
-const PORT = process.env.PORT || 8888;
+app.listen(PORT);
+console.log(`Listening on ${PORT}`);
 
 let ACCESS, REFRESH;
-REFRESH = store.get('refresh');
+REFRESH = store.get('spotifyRefresh');
 
 setIntervalImmediately(() => {
   getNowPlaying();
@@ -53,9 +55,9 @@ app.get('/callback', (req, res) => {
   axios.post('https://accounts.spotify.com/api/token', querystring.stringify(data)).then(response => {
     ACCESS = response.data.access_token;
     REFRESH = response.data.refresh_token;
-    store.set('refresh', REFRESH);
+    store.set('spotifyRefresh', REFRESH);
 
-    getAccess(res);
+    if (res) res.redirect('/');
   }).catch(err => {
     if (ERRORS) console.error(err.response);
     const info = 'Error getting access token from authorization code'
@@ -92,7 +94,7 @@ function getNowPlaying(res) {
     }).then(response => {
       const data =  response.data;
       const info = data.is_playing ? `${data.item.name} - ${data.item.artists[0].name}` : 'Nothing currently playing';
-      updatePlugin(info, data);
+      updatePlugin(info, data || {});
       if (res) res.send(`You're all set to go!<br>Currently Playing: ${info}`);
     }).catch(err => {
       if (ERRORS) console.error(err.response);
@@ -140,6 +142,3 @@ function setIntervalImmediately(func, interval) {
   func();
   return setInterval(func, interval);
 }
-
-app.listen(PORT);
-console.log(`Listening on ${PORT}`);
