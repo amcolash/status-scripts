@@ -91,8 +91,6 @@ function getAccess(res, cb) {
 
 function getEvents(res) {
   if (ACCESS) {
-    if (res) res.send('TODO');
-
     axios.get('https://graph.microsoft.com/v1.0/me/calendars', {
       headers: {
         Authorization: 'Bearer ' + ACCESS
@@ -144,7 +142,10 @@ function getEvents(res) {
           return false;
         });
 
-        updatePlugin(next ? next.subject + ' - ' + next.start.calendar() : 'No Upcoming Events', events);
+        const info = next ? next.subject + ' - ' + next.start.calendar() : 'No Upcoming Events';
+        
+        if (res) res.send(info);
+        updatePlugin(info, events);
       }).catch(err => {
         if (ERRORS) console.error(err.response || err);
         const info = 'Couldn\'t get upcoming events';
@@ -183,7 +184,7 @@ function updatePlugin(info, data) {
           // Trim the ending newline
           tooltip = tooltip.substring(0, tooltip.length - 1);
 
-          file = `<img>${__dirname}/icons/calendar.png</img><txt> ${info}</txt><tool>${tooltip}</tool>`;
+          file = `<img>${__dirname}/icons/calendar.png</img><txt>  ${info}</txt><tool>${tooltip}</tool>`;
         } else {
           file = info;
         }
