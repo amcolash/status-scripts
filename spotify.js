@@ -21,7 +21,7 @@ REFRESH = store.get('refresh');
 
 setIntervalImmediately(() => {
   getNowPlaying();
-}, 10000);
+}, 5000);
 
 app.get('/', (req, res) => {
   getNowPlaying(res);
@@ -92,7 +92,7 @@ function getNowPlaying(res) {
     }).then(response => {
       const data =  response.data;
       const info = data.is_playing ? `${data.item.name} - ${data.item.artists[0].name}` : 'Nothing currently playing';
-      updatePlugin(info);
+      updatePlugin(info, data);
       if (res) res.send(`You're all set to go!<br>Currently Playing: ${info}`);
     }).catch(err => {
       if (ERRORS) console.error(err.response);
@@ -110,12 +110,12 @@ function getNowPlaying(res) {
   }
 }
 
-function updatePlugin(info) {
+function updatePlugin(info, data) {
   switch (PLUGIN) {
     case 'genmon':
-      const data = `<img>/usr/share/icons/hicolor/22x22/apps/spotify-client.png</img><txt> ${info}</txt><tool>${info}<tool>`;
+      const playing = `<img>/usr/share/icons/hicolor/22x22/apps/spotify-client.png</img><txt> ${info}</txt><tool>Spotify playing on ${data.device.name}\n${info}</tool>`;
       const notPlaying = '<txt> </txt><tool>Nothing Currently Playing</tool>';
-      fs.writeFileSync('./info', info !== 'Nothing currently playing' ? data : notPlaying);
+      fs.writeFileSync('./info', info !== 'Nothing currently playing' ? playing : notPlaying);
       break;
     default:
       console.log(info);
