@@ -26,5 +26,11 @@
     "dotenv": "^8.1.0",
     "express": "^4.17.1",
     "fs-store": "^0.3.1"
+  },
+  "nodemonConfig": {
+    "ignore": [
+      "data.json",
+      "info"
+    ]
   }
 }

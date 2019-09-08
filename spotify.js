@@ -1,6 +1,7 @@
+const fs = require('fs');
+const querystring = require('querystring');
 const axios = require('axios');
 const express = require('express');
-const querystring = require('querystring');
 const FileStore = require('fs-store').FileStore;
 
 require('dotenv').config();
@@ -8,18 +9,19 @@ const store = new FileStore('data.json');
 
 const CLIENT_ID = process.env.SPOTIFY_CLIENT_ID;
 const CLIENT_SECRET = process.env.SPOTIFY_CLIENT_SECRET;
+const PLUGIN = process.env.PLUGIN;
 const REDIRECT = 'http://localhost:8888/callback';
-const PORT = process.env.PORT || 8888;
-let ACCESS, REFRESH;
-
-REFRESH = store.get('refresh');
+const ERRORS = false;
 
 const app = express();
+const PORT = process.env.PORT || 8888;
 
-getNowPlaying();
-// setIntervalImmediately(() => {
-//   getNowPlaying();
-// }, 10000);
+let ACCESS, REFRESH;
+REFRESH = store.get('refresh');
+
+setIntervalImmediately(() => {
+  getNowPlaying();
+}, 10000);
 
 app.get('/', (req, res) => {
   getNowPlaying(res);
@@ -55,8 +57,10 @@ app.get('/callback', (req, res) => {
 
     getAccess(res);
   }).catch(err => {
-    console.error(err.response);
-    res.status(500).send('Error getting access token from authorization code');
+    if (ERRORS) console.error(err.response);
+    const info = 'Error getting access token from authorization code'
+    res.status(500).send(info);
+    updatePlugin(info);
   });
 });
 
@@ -72,8 +76,10 @@ function getAccess(res, cb) {
     if (res) res.redirect('/');
     if (cb) cb();
   }).catch(err => {
-    console.error(err.response);
-    if (res) res.status(500).send('Error getting access token from refresh token');
+    if (ERRORS) console.error(err.response);
+    const info = 'Error getting access token from refresh token';
+    if (res) res.status(500).send(info);
+    updatePlugin(info);
   })
 }
 
@@ -85,19 +91,35 @@ function getNowPlaying(res) {
       }
     }).then(response => {
       const data =  response.data;
-      const info = data.is_playing ? data.item.name : 'Nothing currently playing';
-      console.log(info);
-      if (res) res.send(info);
+      const info = data.is_playing ? `${data.item.name} - ${data.item.artists[0].name}` : 'Nothing currently playing';
+      updatePlugin(info);
+      if (res) res.send(`You're all set to go!<br>Currently Playing: ${info}`);
     }).catch(err => {
-      console.error(err.response);
-      if (res) res.status(500).send('Couldn\'t get currently playing data');
+      if (ERRORS) console.error(err.response);
+      const info = 'Couldn\'t get currently playing data';
+      updatePlugin(info);
+      if (res) res.status(500).send(info);
     });
   } else if (REFRESH) {
     console.log('Getting access token');
     getAccess(res, () => getNowPlaying());
   } else {
     if (res) res.redirect('/login');
-    console.error('Not logged in');
+    const info = `Not logged in, please visit http://localhost:${PORT}`;
+    updatePlugin(info);
+  }
+}
+
+function updatePlugin(info) {
+  switch (PLUGIN) {
+    case 'genmon':
+      const data = `<img>/usr/share/icons/hicolor/22x22/apps/spotify-client.png</img><txt> ${info}</txt><tool>${info}<tool>`;
+      const notPlaying = '<txt> </txt><tool>Nothing Currently Playing</tool>';
+      fs.writeFileSync('./info', info !== 'Nothing currently playing' ? data : notPlaying);
+      break;
+    default:
+      console.log(info);
+      break;
   }
 }
 
