@@ -13,8 +13,8 @@ const CLIENT_SECRET = process.env.MICROSOFT_CLIENT_SECRET;
 const PLUGIN = process.env.PLUGIN;
 const PORT = process.env.PORT || 8889;
 const REDIRECT = `http://localhost:${PORT}/callback`;
-const ERRORS = true;
 const scopes = 'offline_access calendars.read';
+const ERRORS = true;
 
 const app = express();
 app.listen(PORT);
@@ -62,7 +62,7 @@ app.get('/callback', (req, res) => {
 
     if (res) res.redirect('/');
   }).catch(err => {
-    if (ERRORS) console.error(err.response);
+    if (ERRORS) console.error(err.response || err);
     const info = 'Error getting access token from authorization code'
     res.status(500).send(info);
     updatePlugin(info);
@@ -82,7 +82,7 @@ function getAccess(res, cb) {
     if (res) res.redirect('/');
     if (cb) cb();
   }).catch(err => {
-    if (ERRORS) console.error(err.response);
+    if (ERRORS) console.error(err.response || err);
     const info = 'Error getting access token from refresh token';
     if (res) res.status(500).send(info);
     updatePlugin(info);
@@ -98,8 +98,9 @@ function getEvents(res) {
         Authorization: 'Bearer ' + ACCESS
       }
     }).then(response => {
-      const startWeek = moment().startOf('week');
-      const endWeek = moment().endOf('week');
+      const now = moment();
+      const startWeek = moment().startOf('w');
+      const endWeek = moment().endOf('w');
 
       const data = {
         startdatetime: startWeek.format(),
@@ -128,21 +129,30 @@ function getEvents(res) {
           });
         });
 
-        // Sort and filter results
+        // Sort results
         events = events.sort((a, b) => {
           return a.start - b.start
-        }).filter(e => e.showAs === 'busy');
+        });
 
-        const info = events[0].subject + ' - ' + events[0].start.calendar()
-        updatePlugin(info, events);
+        let next;
+        events.some(e => { // .some allows for short-circuit
+          // if the event hasn't quite started and has been accepted
+          if (e.start.isAfter(now.add(2, 'm')) && e.showAs === 'busy') {
+            next = e;
+            return true;
+          }
+          return false;
+        });
+
+        updatePlugin(next ? next.subject + ' - ' + next.start.calendar() : 'No Upcoming Events', events);
       }).catch(err => {
-        if (ERRORS) console.error(err.response);
+        if (ERRORS) console.error(err.response || err);
         const info = 'Couldn\'t get upcoming events';
         updatePlugin(info);
         if (res) res.status(500).send(info);
       })
     }).catch(err => {
-      console.error(err.response);
+      if (ERRORS) console.error(err.response || err);
     });
   } else if (REFRESH) {
     console.log('Getting access token');
@@ -162,7 +172,18 @@ function updatePlugin(info, data) {
       case 'genmon':
         let file;
         if (data) {
-          file = `<img>${__dirname}/icons/calendar.png</img><txt> ${info}</txt><tool>${data}</tool>`;
+          const startDay = moment().startOf('d');
+          const endDay = moment().endOf('d');
+          let tooltip = '';
+          data.forEach(e => {
+            if (e.start.isBetween(startDay, endDay)) {
+              tooltip += `${e.subject}: (${e.start.format('h:mm')} - ${e.end.format('h:mm')})\n`;
+            }
+          });
+          // Trim the ending newline
+          tooltip = tooltip.substring(0, tooltip.length - 1);
+
+          file = `<img>${__dirname}/icons/calendar.png</img><txt> ${info}</txt><tool>${tooltip}</tool>`;
         } else {
           file = info;
         }

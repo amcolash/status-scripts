@@ -12,7 +12,7 @@ const CLIENT_SECRET = process.env.SPOTIFY_CLIENT_SECRET;
 const PLUGIN = process.env.PLUGIN;
 const PORT = process.env.PORT || 8888;
 const REDIRECT = `http://localhost:${PORT}/callback`;
-const ERRORS = false;
+const ERRORS = true;
 
 const app = express();
 app.listen(PORT);
@@ -59,7 +59,7 @@ app.get('/callback', (req, res) => {
 
     if (res) res.redirect('/');
   }).catch(err => {
-    if (ERRORS) console.error(err.response);
+    if (ERRORS) console.error(err.response || err);
     const info = 'Error getting access token from authorization code'
     res.status(500).send(info);
     updatePlugin(info);
@@ -78,7 +78,7 @@ function getAccess(res, cb) {
     if (res) res.redirect('/');
     if (cb) cb();
   }).catch(err => {
-    if (ERRORS) console.error(err.response);
+    if (ERRORS) console.error(err.response || err);
     const info = 'Error getting access token from refresh token';
     if (res) res.status(500).send(info);
     updatePlugin(info);
@@ -97,7 +97,7 @@ function getNowPlaying(res) {
       updatePlugin(info, data || {});
       if (res) res.send(`You're all set to go!<br>Currently Playing: ${info}`);
     }).catch(err => {
-      if (ERRORS) console.error(err.response);
+      if (ERRORS) console.error(err.response || err);
       const info = 'Couldn\'t get currently playing data';
       updatePlugin(info);
       if (res) res.status(500).send(info);
@@ -134,7 +134,7 @@ function updatePlugin(info, data) {
         break;
     }
   } catch (err) {
-    if (ERRORS) console.error(err);
+    if (ERRORS) console.error(err.response || err);
   }
 }
 
