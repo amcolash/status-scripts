@@ -23,9 +23,9 @@ console.log(`Listening on ${PORT}`);
 let ACCESS, REFRESH;
 REFRESH = store.get('microsoftRefresh');
 
-// setIntervalImmediately(() => {
-getEvents();
-// }, 5000);
+setIntervalImmediately(() => {
+  getEvents();
+}, 60 * 1000);
 
 app.get('/', (req, res) => {
   getEvents(res);
