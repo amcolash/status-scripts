@@ -113,8 +113,8 @@ function getNowPlaying(res) {
 function updatePlugin(info, data) {
   switch (PLUGIN) {
     case 'genmon':
-      const playing = `<img>/usr/share/icons/hicolor/22x22/apps/spotify-client.png</img><txt> ${info}</txt><tool>Spotify playing on ${data.device.name}\n${info}</tool>`;
-      const notPlaying = '<txt> </txt><tool>Nothing Currently Playing</tool>';
+      const playing = `<img>${__dirname}/icons/spotify.png</img><txt> ${info}</txt><tool>Spotify playing on ${data.device.name}\n${info}</tool>`;
+      const notPlaying = `<img>${__dirname}/icons/spotify_disabled.png</img><txt> </txt><tool>Nothing Currently Playing</tool>`;
       fs.writeFileSync('./info', info !== 'Nothing currently playing' ? playing : notPlaying);
       break;
     default:
