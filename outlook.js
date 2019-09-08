@@ -147,11 +147,16 @@ function getEvents(res) {
         if (res) res.send(info);
         updatePlugin(info, events);
       }).catch(err => {
-        if (ERRORS) console.error(err.response || err);
-        const info = 'Couldn\'t get upcoming events';
-        updatePlugin(info);
-        if (res) res.status(500).send(info);
-      })
+        // Refresh token when expired
+        if (err.status === 401) {
+          getAccess(res, () => getNowPlaying());
+        } else {
+          if (ERRORS) console.error(err.response || err);
+          const info = 'Couldn\'t get upcoming events';
+          updatePlugin(info);
+          if (res) res.status(500).send(info);
+        }
+      });
     }).catch(err => {
       if (ERRORS) console.error(err.response || err);
     });

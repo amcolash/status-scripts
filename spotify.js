@@ -97,10 +97,15 @@ function getNowPlaying(res) {
       updatePlugin(info, data || {});
       if (res) res.send(`You're all set to go!<br>Currently Playing: ${info}`);
     }).catch(err => {
-      if (ERRORS) console.error(err.response || err);
-      const info = 'Couldn\'t get currently playing data';
-      updatePlugin(info);
-      if (res) res.status(500).send(info);
+      // Refresh token when expired
+      if (err.status === 401) {
+        getAccess(res, () => getNowPlaying());
+      } else {
+        if (ERRORS) console.error(err.response || err);
+        const info = 'Couldn\'t get currently playing data';
+        updatePlugin(info);
+        if (res) res.status(500).send(info);
+      }
     });
   } else if (REFRESH) {
     console.log('Getting access token');
