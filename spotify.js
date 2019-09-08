@@ -57,7 +57,7 @@ app.get('/callback', (req, res) => {
     REFRESH = response.data.refresh_token;
     store.set('spotifyRefresh', REFRESH);
 
-    if (res) res.redirect('/');
+    res.redirect('/');
   }).catch(err => {
     if (ERRORS) console.error(err.response || err);
     const info = 'Error getting access token from authorization code'
@@ -76,7 +76,7 @@ function getAccess(res, cb) {
   axios.post('https://accounts.spotify.com/api/token', querystring.stringify(data)).then(response => {
     ACCESS = response.data.access_token;
     if (res) res.redirect('/');
-    if (cb) cb();
+    else if (cb) cb();
   }).catch(err => {
     if (ERRORS) console.error(err.response || err);
     const info = 'Error getting access token from refresh token';

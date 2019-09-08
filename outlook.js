@@ -60,7 +60,7 @@ app.get('/callback', (req, res) => {
     REFRESH = response.data.refresh_token;
     store.set('microsoftRefresh', REFRESH);
 
-    if (res) res.redirect('/');
+    res.redirect('/');
   }).catch(err => {
     if (ERRORS) console.error(err.response || err);
     const info = 'Error getting access token from authorization code'
@@ -80,7 +80,7 @@ function getAccess(res, cb) {
   axios.post('https://login.microsoftonline.com/common/oauth2/v2.0/token', querystring.stringify(data)).then(response => {
     ACCESS = response.data.access_token;
     if (res) res.redirect('/');
-    if (cb) cb();
+    else if (cb) cb();
   }).catch(err => {
     if (ERRORS) console.error(err.response || err);
     const info = 'Error getting access token from refresh token';
