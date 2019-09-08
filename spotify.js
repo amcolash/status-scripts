@@ -116,13 +116,15 @@ function updatePlugin(info, data) {
       case 'genmon':
         let file;
         if (data && data.is_playing) {
-          file = `<img>${__dirname}/icons/spotify.png</img><txt> ${info}</txt><tool>Spotify playing on ${data.device.name}\n${info}</tool>`.replace('/&/g','+');
+          file = `<img>${__dirname}/icons/spotify.png</img><txt> ${info}</txt><tool>Spotify playing on ${data.device.name}\n${info}</tool>`;
         } else if (data) {
           file = `<img>${__dirname}/icons/spotify_disabled.png</img><txt> </txt><tool>Nothing Currently Playing</tool>`;
         } else {
           file = info;
         }
-  
+        // Fix issues with & character
+        file = file.replace(/&/g,'+');
+
         fs.writeFileSync('./info', file);
         break;
       default:
