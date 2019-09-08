@@ -26,9 +26,11 @@ MICROSOFT_CLIENT_SECRET=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 PLUGIN=genmon
 ```
 
-Finally, you can start one of the scripts locally with `node spotify.js` or `node outlook.js`.
+Install `pm2` to daemonize the script `npm install pm2 -g`.
 
-If you are using genmon, just set your script as `[path to repo]/genmon_spotify.sh` or `[path to repo]/genmon_outlook.sh`. I suggest setting the update interval to 1 second. Genmon doesn't poll the apis every second, just prints out the output of the file. The refresh rate is controlled in the script itself).
+Finally, you can daemonize one of the scripts with `pm2 spotify.js && pm2 save` or `node outlook.js && pm2 save`.
+
+If you are using genmon, just set your script as `cat [path to repo]/spotify` or `cat [path to repo]/outlook`. I suggest setting the update interval to 1 second. Genmon doesn't poll the apis every second, just prints out the output of the file. The refresh rate is controlled in the script itself).
 
 ## Attribution for Icons
 Spotify icon from [Spotify](https://developer.spotify.com/branding-guidelines/) and calendar icon from [IconFinder](https://www.iconfinder.com/icons/285670/calendar_icon).
