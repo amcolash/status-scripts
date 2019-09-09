@@ -99,7 +99,7 @@ function getNowPlaying(res) {
       if (res) res.send(`You're all set to go!<br>Currently Playing: ${info}`);
     }).catch(err => {
       // Refresh token when expired
-      if (err.status === 401) {
+      if (err.response && err.response.status === 401) {
         getAccess(res, () => getNowPlaying());
       } else {
         if (ERRORS) console.error(err.response || err);

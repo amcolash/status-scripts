@@ -149,8 +149,8 @@ function getEvents(res) {
         updatePlugin(info, events);
       }).catch(err => {
         // Refresh token when expired
-        if (err.status === 401) {
-          getAccess(res, () => getNowPlaying());
+        if (err.response && err.response.status === 401) {
+          getAccess(res, () => getEvents());
         } else {
           if (ERRORS) console.error(err.response || err);
           const info = 'Couldn\'t get upcoming events';
