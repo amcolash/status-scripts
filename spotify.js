@@ -5,8 +5,13 @@ const axios = require('axios');
 const express = require('express');
 const FileStore = require('fs-store').FileStore;
 
+if (!fs.existsSync(path.resolve(__dirname, '.env'))) {
+  console.error('.env file missing, please make one!');
+  process.exit(1);
+}
+
 require('dotenv').config({path: path.resolve(__dirname, '.env')});
-const store = new FileStore(path.resolve(__dirname, 'data.json'));
+const store = new FileStore(path.resolve(__dirname, 'data/spotify_token.json'));
 
 const CLIENT_ID = process.env.SPOTIFY_CLIENT_ID;
 const CLIENT_SECRET = process.env.SPOTIFY_CLIENT_SECRET;
@@ -133,11 +138,11 @@ function updatePlugin(info, data) {
         // Fix issues with & character
         file = file.replace(/&/g,'+');
 
-        fs.writeFileSync(path.resolve(__dirname, 'spotify'), file);
+        fs.writeFileSync(path.resolve(__dirname, 'data/spotify'), file);
         break;
       default:
         console.log(info);
-        fs.writeFileSync(path.resolve(__dirname, 'outlook'), file);
+        fs.writeFileSync(path.resolve(__dirname, 'data/spotify'), info);
         break;
     }
   } catch (err) {

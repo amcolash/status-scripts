@@ -60,9 +60,5 @@ typings/
 # next.js build output
 .next
 
-# data store
-data.json
-
 # data files
-spotify
-outlook
+data/

@@ -6,8 +6,13 @@ const express = require('express');
 const FileStore = require('fs-store').FileStore;
 const moment = require('moment');
 
+if (!fs.existsSync(path.resolve(__dirname, '.env'))) {
+  console.error('.env file missing, please make one!');
+  process.exit(1);
+}
+
 require('dotenv').config({path: path.resolve(__dirname, '.env')});
-const store = new FileStore(path.resolve(__dirname, 'data.json'));
+const store = new FileStore(path.resolve(__dirname, 'data/outlook_token.json'));
 
 const CLIENT_ID = process.env.MICROSOFT_CLIENT_ID;
 const CLIENT_SECRET = process.env.MICROSOFT_CLIENT_SECRET;
@@ -44,7 +49,7 @@ app.get('/login', (req, res) => {
 });
 
 app.get('/callback', (req, res) => {
-  console.log(req.query);
+  //console.log(req.query);
   const code = req.query.code || null;
 
   const data = {
@@ -98,12 +103,12 @@ function getEvents(res) {
       }
     }).then(response => {
       const now = moment();
-      const startWeek = moment().startOf('w');
-      const endWeek = moment().endOf('w');
-
+      const start = moment().startOf('d');
+      const end = start.clone().add(7, 'd');
+      
       const data = {
-        startdatetime: startWeek.format(),
-        enddatetime: endWeek.format(),
+        startdatetime: start.toISOString(),
+        enddatetime: end.toISOString(),
         $top: 50, // 50 items per page
       };
 
@@ -136,7 +141,7 @@ function getEvents(res) {
         let next;
         events.some(e => { // .some allows for short-circuit
           // if the event hasn't quite started and has been accepted
-          if (e.start.isAfter(now.add(2, 'm')) && e.showAs === 'busy') {
+          if (e.start.clone().add(5, 'm').isAfter(now) && e.showAs === 'busy') {
             next = e;
             return true;
           }
@@ -182,7 +187,7 @@ function updatePlugin(info, data) {
           let tooltip = '';
           data.forEach(e => {
             if (e.start.isBetween(startDay, endDay)) {
-              tooltip += `${e.subject}: (${e.start.format('h:mm')} - ${e.end.format('h:mm')})\n`;
+              tooltip += `${e.start.format('h:mma')} - ${e.end.format('h:mma')}: ${e.subject}\n`;
             }
           });
           // Trim the ending newline
@@ -195,11 +200,11 @@ function updatePlugin(info, data) {
         // Fix issues with & character
         file = file.replace(/&/g,'+');
 
-        fs.writeFileSync(path.resolve(__dirname, 'outlook'), file);
+        fs.writeFileSync(path.resolve(__dirname, 'data/outlook'), file);
         break;
       default:
         console.log(info);
-        fs.writeFileSync(path.resolve(__dirname, 'outlook'), info);
+        fs.writeFileSync(path.resolve(__dirname, 'data/outlook'), info);
         break;
     }
   } catch (err) {
