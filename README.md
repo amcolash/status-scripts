@@ -26,9 +26,10 @@ MICROSOFT_CLIENT_SECRET=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 PLUGIN=genmon
 ```
 
-Install `pm2` to daemonize the script `npm install pm2 -g`. Set it up as a service `pm2 startup` and follow directions.
+Install `pm2` to daemonize the script `npm install pm2 -g`.
 
-Finally, you can daemonize one of the scripts with `pm2 spotify.js && pm2 save` or `node outlook.js && pm2 save`.
+You can daemonize one of the scripts with `pm2 start spotify.js && pm2 save` or `pm2 start outlook.js && pm2 save`.
+Finally, set up `pm2` as a service with `pm2 startup` and follow directions.
 
 If you are using genmon, just set your script as `cat [path to repo]/data/spotify` or `cat [path to repo]/data/outlook`. I suggest setting the update interval to 1 second. Genmon doesn't poll the apis every second, just prints out the output of the file. The refresh rate is controlled in the script itself).
 
