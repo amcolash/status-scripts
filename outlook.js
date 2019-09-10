@@ -153,18 +153,19 @@ function getEvents(res) {
         if (res) res.send(info);
         updatePlugin(info, events);
       }).catch(err => {
-        // Refresh token when expired
-        if (err.response && err.response.status === 401) {
-          getAccess(res, () => getEvents());
-        } else {
-          if (ERRORS) console.error(err.response || err);
-          const info = 'Couldn\'t get upcoming events';
-          updatePlugin(info);
-          if (res) res.status(500).send(info);
-        }
+        if (ERRORS) console.error(err.response || err);
       });
     }).catch(err => {
-      if (ERRORS) console.error(err.response || err);
+      // Refresh token when expired
+      if (err.response && err.response.status === 401) {
+        console.log('Refreshing access token');
+        getAccess(res, () => getEvents());
+      } else {
+        if (ERRORS) console.error(err.response || err);
+        const info = 'Couldn\'t get upcoming events';
+        updatePlugin(info);
+        if (res) res.status(500).send(info);
+      }
     });
   } else if (REFRESH) {
     console.log('Getting access token');

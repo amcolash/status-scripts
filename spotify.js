@@ -105,6 +105,7 @@ function getNowPlaying(res) {
     }).catch(err => {
       // Refresh token when expired
       if (err.response && err.response.status === 401) {
+        console.log('Refreshing access token');
         getAccess(res, () => getNowPlaying());
       } else {
         if (ERRORS) console.error(err.response || err);
