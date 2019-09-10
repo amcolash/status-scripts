@@ -105,7 +105,7 @@ function getEvents(res) {
       const now = moment();
       const start = moment().startOf('d');
       const end = start.clone().add(7, 'd');
-      
+
       const data = {
         startdatetime: start.toISOString(),
         enddatetime: end.toISOString(),
@@ -149,7 +149,7 @@ function getEvents(res) {
         });
 
         const info = next ? next.subject + ' - ' + next.start.calendar() : 'No Upcoming Events';
-        
+
         if (res) res.send(info);
         updatePlugin(info, events);
       }).catch(err => {
@@ -186,15 +186,17 @@ function updatePlugin(info, data) {
           const startDay = moment().startOf('d');
           const endDay = moment().endOf('d');
           let tooltip = '';
+          let count = 0;
           data.forEach(e => {
             if (e.start.isBetween(startDay, endDay)) {
               tooltip += `${e.start.format('h:mma')} - ${e.end.format('h:mma')}: ${e.subject}\n`;
+              count++;
             }
           });
           // Trim the ending newline
           tooltip = tooltip.substring(0, tooltip.length - 1);
 
-          file = `<img>${__dirname}/icons/calendar.png</img><txt>  ${info}</txt><tool>${tooltip}</tool>`;
+          file = `<img>${__dirname}/icons/calendar.png</img><txt>  [${count}] ${info}</txt><tool>${tooltip}</tool>`;
         } else {
           file = info;
         }
