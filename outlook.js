@@ -187,7 +187,7 @@ function updatePlugin(info, data) {
           const endDay = moment().endOf('d');
           let tooltip = '';
           data.forEach(e => {
-            if (e.start.isBetween(startDay, endDay)) {
+            if (e.start.isBetween(startDay, endDay) && e.subject.indexOf('Canceled') === -1) {
               tooltip += `${e.start.format('h:mma')} - ${e.end.format('h:mma')}: ${e.subject}\n`;
             }
           });
