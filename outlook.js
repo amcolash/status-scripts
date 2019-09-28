@@ -199,7 +199,7 @@ function updatePlugin(info, data) {
           // Trim the ending newline
           tooltip = tooltip.substring(0, tooltip.length - 1);
 
-          file = `<img>${__dirname}/icons/calendar.png</img><txt>  [${count}] ${info}</txt><tool>${tooltip}</tool>`;
+          file = `<img>${__dirname}/icons/calendar.png</img><txt>  [${count} Today] ${info}</txt><tool>${tooltip}</tool>`;
         } else {
           file = info;
         }
