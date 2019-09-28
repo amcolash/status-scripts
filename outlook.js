@@ -189,15 +189,17 @@ function updatePlugin(info, data) {
           const startDay = moment().startOf('d');
           const endDay = moment().endOf('d');
           let tooltip = '';
+          let count = 0;
           data.forEach(e => {
             if (e.start.isBetween(startDay, endDay) && e.subject.indexOf('Canceled') === -1) {
               tooltip += `${e.start.format('h:mma')} - ${e.end.format('h:mma')}: ${e.subject}\n`;
+              count++;
             }
           });
           // Trim the ending newline
           tooltip = tooltip.substring(0, tooltip.length - 1);
 
-          file = `<img>${__dirname}/icons/calendar.png</img><txt>  ${info}</txt><tool>${tooltip}</tool>`;
+          file = `<img>${__dirname}/icons/calendar.png</img><txt>  [${count}] ${info}</txt><tool>${tooltip}</tool>`;
         } else {
           file = info;
         }
