@@ -16,7 +16,7 @@ const store = new FileStore(path.resolve(__dirname, 'data/spotify_token.json'));
 const CLIENT_ID = process.env.SPOTIFY_CLIENT_ID;
 const CLIENT_SECRET = process.env.SPOTIFY_CLIENT_SECRET;
 const PLUGIN = process.env.PLUGIN;
-const PORT = process.env.PORT || 8888;
+const PORT = process.env.PORT || 9001;
 const REDIRECT = `http://localhost:${PORT}/callback`;
 const ERRORS = true;
 

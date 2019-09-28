@@ -17,7 +17,7 @@ const store = new FileStore(path.resolve(__dirname, 'data/outlook_token.json'));
 const CLIENT_ID = process.env.MICROSOFT_CLIENT_ID;
 const CLIENT_SECRET = process.env.MICROSOFT_CLIENT_SECRET;
 const PLUGIN = process.env.PLUGIN;
-const PORT = process.env.PORT || 8889;
+const PORT = process.env.PORT || 9002;
 const REDIRECT = `http://localhost:${PORT}/callback`;
 const scopes = 'offline_access calendars.read';
 const ERRORS = true;
@@ -105,7 +105,7 @@ function getEvents(res) {
       const now = moment();
       const start = moment().startOf('d');
       const end = start.clone().add(7, 'd');
-      
+
       const data = {
         startdatetime: start.toISOString(),
         enddatetime: end.toISOString(),
@@ -141,7 +141,10 @@ function getEvents(res) {
         let next;
         events.some(e => { // .some allows for short-circuit
           // if the event hasn't quite started and has been accepted
-          if (e.start.clone().add(5, 'm').isAfter(now) && e.showAs === 'busy') {
+          if (e.start.clone().add(5, 'm').isAfter(now) && e.showAs === 'busy' &&
+            e.subject.toLowerCase().indexOf('standup') === -1 &&
+            e.subject.toLowerCase().indexOf('triage') === -1) {
+
             next = e;
             return true;
           }
@@ -149,7 +152,7 @@ function getEvents(res) {
         });
 
         const info = next ? next.subject + ' - ' + next.start.calendar() : 'No Upcoming Events';
-        
+
         if (res) res.send(info);
         updatePlugin(info, events);
       }).catch(err => {
