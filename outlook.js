@@ -141,7 +141,10 @@ function getEvents(res) {
         let next;
         events.some(e => { // .some allows for short-circuit
           // if the event hasn't quite started and has been accepted
-          if (e.start.clone().add(5, 'm').isAfter(now) && e.showAs === 'busy' &&
+          // and will happen within 3 days
+          if (e.start.clone().add(5, 'm').isAfter(now) &&
+            e.start.isBefore(now.clone().add(3, 'd')) &&
+            e.showAs === 'busy' &&
             e.subject.toLowerCase().indexOf('standup') === -1 &&
             e.subject.toLowerCase().indexOf('triage') === -1) {
 
