@@ -154,7 +154,7 @@ function getEvents(res) {
           return false;
         });
 
-        const info = next ? next.subject + ' - ' + next.start.calendar() : 'No Upcoming Events';
+        const info = next ? truncateEvent(next.subject) + ' - ' + next.start.calendar() : 'No Upcoming Events';
 
         if (res) res.send(info);
         updatePlugin(info, events);
@@ -181,6 +181,14 @@ function getEvents(res) {
     const info = `Not logged in, please visit http://localhost:${PORT}`;
     updatePlugin(info);
   }
+}
+
+function truncateEvent(title) {
+  if (title.length > 35) {
+    return title.substring(0, 30) + '...';
+  }
+
+  return title;
 }
 
 function updatePlugin(info, data) {
