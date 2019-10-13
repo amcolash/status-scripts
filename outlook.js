@@ -184,8 +184,9 @@ function getEvents(res) {
 }
 
 function truncateEvent(title) {
-  if (title.length > 35) {
-    return title.substring(0, 30) + '...';
+  const maxLength = 35;
+  if (title.length > maxLength) {
+    return title.substring(0, maxLength) + '...';
   }
 
   return title;

@@ -91,6 +91,14 @@ function getAccess(res, cb) {
   })
 }
 
+function trimData(value) {
+  const maxLength = 35;
+  if (value.length > maxLength) {
+    value = value.substring(0, maxLength) + '...';
+  }
+  return value;
+}
+
 function getNowPlaying(res) {
   if (ACCESS) {
     axios.get('https://api.spotify.com/v1/me/player', {
@@ -99,7 +107,7 @@ function getNowPlaying(res) {
       }
     }).then(response => {
       const data =  response.data;
-      const info = data.is_playing ? `${data.item.name} - ${data.item.artists[0].name}` : 'Nothing currently playing';
+      const info = data.is_playing ? `${trimData(data.item.name)} - ${trimData(data.item.artists[0].name)}` : 'Nothing currently playing';
       updatePlugin(info, data || {});
       if (res) res.send(`You're all set to go!<br>Currently Playing: ${info}`);
     }).catch(err => {
