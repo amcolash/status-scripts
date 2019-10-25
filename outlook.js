@@ -200,12 +200,22 @@ function updatePlugin(info, data) {
         if (data) {
           const startDay = moment().startOf('d');
           const endDay = moment().endOf('d');
+          const tomorrow = moment().add(1, 'd').endOf('d');
           let tooltip = '';
           let count = 0;
+          let separator = false;
           data.forEach(e => {
-            if (e.start.isBetween(startDay, endDay) && e.subject.indexOf('Canceled') === -1) {
-              tooltip += `${e.start.format('h:mma')} - ${e.end.format('h:mma')}: ${e.subject}\n`;
-              count++;
+            if (e.subject.indexOf('Cenceled') === -1) {
+              if (e.start.isBetween(startDay, endDay)) {
+                tooltip += `${e.start.format('h:mma')} - ${e.end.format('h:mma')}: ${e.subject}\n`;
+                count++;
+              } else if (e.start.isBetween(endDay, tomorrow)) {
+                if (!separator) {
+                  tooltip += '------------------------------------------------------------------------------\n';
+                  separator = true;
+                }
+                tooltip += `${e.start.format('h:mma')} - ${e.end.format('h:mma')}: ${e.subject}\n`;
+              }
             }
           });
           // Trim the ending newline
