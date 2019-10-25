@@ -183,13 +183,18 @@ function getEvents(res) {
   }
 }
 
-function truncateEvent(title) {
-  const maxLength = 35;
+function truncateEvent(title, max) {
+  const maxLength = max || 35;
   if (title.length > maxLength) {
     return title.substring(0, maxLength) + '...';
   }
 
   return title;
+}
+
+function padTime(time) {
+  if (time.length === 6) return time.padStart(8, ' ');
+  return time;
 }
 
 function updatePlugin(info, data) {
@@ -204,20 +209,29 @@ function updatePlugin(info, data) {
           let tooltip = '';
           let count = 0;
           let separator = false;
+          let maxLength = 0;
           data.forEach(e => {
             if (e.subject.indexOf('Cenceled') === -1) {
               if (e.start.isBetween(startDay, endDay)) {
-                tooltip += `${e.start.format('h:mma')} - ${e.end.format('h:mma')}: ${e.subject}\n`;
+                const text = `${padTime(e.start.format('h:mma'))} - ${padTime(e.end.format('h:mma'))}: ${truncateEvent(e.subject, 50)}\n`;
+                maxLength = Math.max(maxLength, text.length);
+                tooltip += text;
                 count++;
               } else if (e.start.isBetween(endDay, tomorrow)) {
                 if (!separator) {
-                  tooltip += '------------------------------------------------------------------------------\n';
+                  tooltip += '{SEPARATOR}\n';
                   separator = true;
                 }
-                tooltip += `${e.start.format('h:mma')} - ${e.end.format('h:mma')}: ${e.subject}\n`;
+                const text = `${padTime(e.start.format('h:mma'))} - ${padTime(e.end.format('h:mma'))}: ${truncateEvent(e.subject, 50)}\n`;
+                maxLength = Math.max(maxLength, text.length);
+                tooltip += text;
               }
             }
           });
+
+          // Make the separator as long as the longest line
+          tooltip = tooltip.replace('{SEPARATOR}', '-'.repeat(maxLength * 1.3));
+
           // Trim the ending newline
           tooltip = tooltip.substring(0, tooltip.length - 1);
 
