@@ -5,12 +5,15 @@ const axios = require('axios');
 const express = require('express');
 const FileStore = require('fs-store').FileStore;
 
-if (!fs.existsSync(path.resolve(__dirname, '.env'))) {
+const IS_DOCKER = fs.existsSync('/.dockerenv');
+
+if (!fs.existsSync(path.resolve(__dirname, '.env')) && !IS_DOCKER) {
   console.error('.env file missing, please make one!');
   process.exit(1);
 }
 
 require('dotenv').config({path: path.resolve(__dirname, '.env')});
+fs.mkdirSync(__dirname + '/data', { recursive: true });
 const store = new FileStore(path.resolve(__dirname, 'data/spotify_token.json'));
 
 const CLIENT_ID = process.env.SPOTIFY_CLIENT_ID;
@@ -132,6 +135,7 @@ function getNowPlaying(res) {
   }
 }
 
+let lastData;
 function updatePlugin(info, data) {
   try {
     switch (PLUGIN) {
@@ -148,6 +152,23 @@ function updatePlugin(info, data) {
         file = file.replace(/&/g,'+');
 
         fs.writeFileSync(path.resolve(__dirname, 'data/spotify'), file);
+        break;
+      case 'spectrum':
+        if (data && data.is_playing) {
+          // Clean up data and fix some characters that don't have support on the led spectrum
+          info = info.replace('Æ', 'AE');
+          info = info.replace(' - Edit', '');
+          info = info.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+          if (info !== lastData) {
+            console.log(info);
+            axios.post('http://192.168.1.110/song?song=' + info).catch(err => {
+              console.error(err);
+            });
+          }
+
+          lastData = info;
+        }
         break;
       default:
         console.log(info);
