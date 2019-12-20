@@ -158,6 +158,7 @@ function updatePlugin(info, data) {
           // Clean up data and fix some characters that don't have support on the led spectrum
           info = info.replace('Æ', 'AE');
           info = info.replace(' - Edit', '');
+          info = info.replace(' - Original Mix', '');
           info = info.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
           if (info !== lastData) {
