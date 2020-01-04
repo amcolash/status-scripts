@@ -11,7 +11,7 @@ if (!fs.existsSync(path.resolve(__dirname, '.env'))) {
   process.exit(1);
 }
 
-require('dotenv').config({path: path.resolve(__dirname, '.env')});
+require('dotenv').config({ path: path.resolve(__dirname, '.env') });
 const store = new FileStore(path.resolve(__dirname, 'data/outlook_token.json'));
 
 const CLIENT_ID = process.env.MICROSOFT_CLIENT_ID;
@@ -38,13 +38,14 @@ app.get('/', (req, res) => {
 });
 
 app.get('/login', (req, res) => {
-  res.redirect('https://login.microsoftonline.com/common/oauth2/v2.0/authorize?' +
-    querystring.stringify({
-      response_type: 'code',
-      client_id: CLIENT_ID,
-      scope: scopes,
-      redirect_uri: REDIRECT
-    })
+  res.redirect(
+    'https://login.microsoftonline.com/common/oauth2/v2.0/authorize?' +
+      querystring.stringify({
+        response_type: 'code',
+        client_id: CLIENT_ID,
+        scope: scopes,
+        redirect_uri: REDIRECT
+      })
   );
 });
 
@@ -61,18 +62,21 @@ app.get('/callback', (req, res) => {
     client_secret: CLIENT_SECRET
   };
 
-  axios.post('https://login.microsoftonline.com/common/oauth2/v2.0/token', querystring.stringify(data)).then(response => {
-    ACCESS = response.data.access_token;
-    REFRESH = response.data.refresh_token;
-    store.set('microsoftRefresh', REFRESH);
+  axios
+    .post('https://login.microsoftonline.com/common/oauth2/v2.0/token', querystring.stringify(data))
+    .then(response => {
+      ACCESS = response.data.access_token;
+      REFRESH = response.data.refresh_token;
+      store.set('microsoftRefresh', REFRESH);
 
-    res.redirect('/');
-  }).catch(err => {
-    if (ERRORS) console.error(err.response || err);
-    const info = 'Error getting access token from authorization code'
-    res.status(500).send(info);
-    updatePlugin(info);
-  });
+      res.redirect('/');
+    })
+    .catch(err => {
+      if (ERRORS) console.error(err.response || err);
+      const info = 'Error getting access token from authorization code';
+      res.status(500).send(info);
+      updatePlugin(info);
+    });
 });
 
 function getAccess(res, cb) {
@@ -83,96 +87,110 @@ function getAccess(res, cb) {
     client_id: CLIENT_ID,
     client_secret: CLIENT_SECRET
   };
-  axios.post('https://login.microsoftonline.com/common/oauth2/v2.0/token', querystring.stringify(data)).then(response => {
-    ACCESS = response.data.access_token;
-    if (res) res.redirect('/');
-    else if (cb) cb();
-  }).catch(err => {
-    if (ERRORS) console.error(err.response || err);
-    const info = 'Error getting access token from refresh token';
-    if (res) res.status(500).send(info);
-    updatePlugin(info);
-  })
+  axios
+    .post('https://login.microsoftonline.com/common/oauth2/v2.0/token', querystring.stringify(data))
+    .then(response => {
+      ACCESS = response.data.access_token;
+      if (res) res.redirect('/');
+      else if (cb) cb();
+    })
+    .catch(err => {
+      if (ERRORS) console.error(err.response || err);
+      const info = 'Error getting access token from refresh token';
+      if (res) res.status(500).send(info);
+      updatePlugin(info);
+    });
 }
 
 function getEvents(res) {
   if (ACCESS) {
-    axios.get('https://graph.microsoft.com/v1.0/me/calendars', {
-      headers: {
-        Authorization: 'Bearer ' + ACCESS
-      }
-    }).then(response => {
-      const now = moment();
-      const start = moment().startOf('d');
-      const end = start.clone().add(7, 'd');
+    axios
+      .get('https://graph.microsoft.com/v1.0/me/calendars', {
+        headers: {
+          Authorization: 'Bearer ' + ACCESS
+        }
+      })
+      .then(response => {
+        const now = moment();
+        const start = moment().startOf('d');
+        const end = start.clone().add(7, 'd');
 
-      const data = {
-        startdatetime: start.toISOString(),
-        enddatetime: end.toISOString(),
-        $top: 50, // 50 items per page
-      };
+        const data = {
+          startdatetime: start.toISOString(),
+          enddatetime: end.toISOString(),
+          $top: 50 // 50 items per page
+        };
 
-      let p = response.data.value.map(calendar => {
-        return axios.get(`https://graph.microsoft.com/v1.0/me/calendars/${calendar.id}/calendarview?` + querystring.stringify(data), {
-          headers: {
-            Authorization: 'Bearer ' + ACCESS,
-            Prefer: 'outlook.timezone="Pacific Standard Time"'
-          }
-        });
-      });
-
-      axios.all(p).then(data => {
-        let events = [];
-        data.forEach(c => {
-          c.data.value.forEach(e => {
-            events.push({
-              ...e,
-              start: moment(e.start.dateTime),
-              end: moment(e.end.dateTime)
-            });
+        let p = response.data.value.map(calendar => {
+          return axios.get(`https://graph.microsoft.com/v1.0/me/calendars/${calendar.id}/calendarview?` + querystring.stringify(data), {
+            headers: {
+              Authorization: 'Bearer ' + ACCESS,
+              Prefer: 'outlook.timezone="Pacific Standard Time"'
+            }
           });
         });
 
-        // Sort results
-        events = events.sort((a, b) => {
-          return a.start - b.start
-        });
+        axios
+          .all(p)
+          .then(data => {
+            let events = [];
+            data.forEach(c => {
+              c.data.value.forEach(e => {
+                events.push({
+                  ...e,
+                  start: moment(e.start.dateTime),
+                  end: moment(e.end.dateTime)
+                });
+              });
+            });
 
-        let next;
-        events.some(e => { // .some allows for short-circuit
-          // if the event hasn't quite started and has been accepted
-          // and will happen within 3 days
-          if (e.start.clone().add(5, 'm').isAfter(now) &&
-            e.start.isBefore(now.clone().add(3, 'd')) &&
-            e.showAs === 'busy' &&
-            e.subject.toLowerCase().indexOf('standup') === -1 &&
-            e.subject.toLowerCase().indexOf('triage') === -1) {
+            // Sort results
+            events = events.sort((a, b) => {
+              return a.start - b.start;
+            });
 
-            next = e;
-            return true;
-          }
-          return false;
-        });
+            let next;
+            events.some(e => {
+              // .some allows for short-circuit
+              // if the event hasn't quite started and has been accepted
+              // and will happen within 3 days
+              if (
+                e.start
+                  .clone()
+                  .add(5, 'm')
+                  .isAfter(now) &&
+                e.start.isBefore(now.clone().add(3, 'd')) &&
+                e.showAs === 'busy' &&
+                e.subject.toLowerCase().indexOf('standup') === -1 &&
+                e.subject.toLowerCase().indexOf('triage') === -1
+              ) {
+                next = e;
+                return true;
+              }
+              return false;
+            });
 
-        const info = next ? truncateEvent(next.subject) + ' - ' + next.start.calendar() : 'No Upcoming Events';
+            const info = next ? truncateEvent(next.subject) + ' - ' + next.start.calendar() : 'No Upcoming Events';
 
-        if (res) res.send(info);
-        updatePlugin(info, events);
-      }).catch(err => {
-        if (ERRORS) console.error(err.response || err);
+            if (res) res.send(info);
+            updatePlugin(info, events);
+          })
+          .catch(err => {
+            if (ERRORS) console.error(err.response || err);
+          });
+      })
+      .catch(err => {
+        // Refresh token when expired
+        if (err.response && err.response.status === 401) {
+          console.log('Refreshing access token');
+          getAccess(res, () => getEvents());
+        } else {
+          if (ERRORS) console.error(err.response || err);
+          const info = "Couldn't get upcoming events";
+          updatePlugin(info);
+          if (res) res.status(500).send(info);
+        }
       });
-    }).catch(err => {
-      // Refresh token when expired
-      if (err.response && err.response.status === 401) {
-        console.log('Refreshing access token');
-        getAccess(res, () => getEvents());
-      } else {
-        if (ERRORS) console.error(err.response || err);
-        const info = 'Couldn\'t get upcoming events';
-        updatePlugin(info);
-        if (res) res.status(500).send(info);
-      }
-    });
   } else if (REFRESH) {
     console.log('Getting access token');
     getAccess(res, () => getEvents());
@@ -205,7 +223,9 @@ function updatePlugin(info, data) {
         if (data) {
           const startDay = moment().startOf('d');
           const endDay = moment().endOf('d');
-          const tomorrow = moment().add(1, 'd').endOf('d');
+          const tomorrow = moment()
+            .add(1, 'd')
+            .endOf('d');
           let tooltip = '';
           let count = 0;
           let separator = false;
@@ -240,7 +260,7 @@ function updatePlugin(info, data) {
           file = info;
         }
         // Fix issues with & character
-        file = file.replace(/&/g,'+');
+        file = file.replace(/&/g, '+');
 
         fs.writeFileSync(path.resolve(__dirname, 'data/outlook'), file);
         break;

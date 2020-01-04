@@ -12,7 +12,7 @@ if (!fs.existsSync(path.resolve(__dirname, '.env')) && !IS_DOCKER) {
   process.exit(1);
 }
 
-require('dotenv').config({path: path.resolve(__dirname, '.env')});
+require('dotenv').config({ path: path.resolve(__dirname, '.env') });
 fs.mkdirSync(__dirname + '/data', { recursive: true });
 const store = new FileStore(path.resolve(__dirname, 'data/spotify_token.json'));
 
@@ -40,13 +40,14 @@ app.get('/', (req, res) => {
 
 app.get('/login', (req, res) => {
   var scope = 'user-read-playback-state user-modify-playback-state';
-  res.redirect('https://accounts.spotify.com/authorize?' +
-    querystring.stringify({
-      response_type: 'code',
-      client_id: CLIENT_ID,
-      scope: scope,
-      redirect_uri: REDIRECT,
-    })
+  res.redirect(
+    'https://accounts.spotify.com/authorize?' +
+      querystring.stringify({
+        response_type: 'code',
+        client_id: CLIENT_ID,
+        scope: scope,
+        redirect_uri: REDIRECT
+      })
   );
 });
 
@@ -61,18 +62,21 @@ app.get('/callback', (req, res) => {
     client_secret: CLIENT_SECRET
   };
 
-  axios.post('https://accounts.spotify.com/api/token', querystring.stringify(data)).then(response => {
-    ACCESS = response.data.access_token;
-    REFRESH = response.data.refresh_token;
-    store.set('spotifyRefresh', REFRESH);
+  axios
+    .post('https://accounts.spotify.com/api/token', querystring.stringify(data))
+    .then(response => {
+      ACCESS = response.data.access_token;
+      REFRESH = response.data.refresh_token;
+      store.set('spotifyRefresh', REFRESH);
 
-    res.redirect('/');
-  }).catch(err => {
-    if (ERRORS) console.error(err.response || err);
-    const info = 'Error getting access token from authorization code'
-    res.status(500).send(info);
-    updatePlugin(info);
-  });
+      res.redirect('/');
+    })
+    .catch(err => {
+      if (ERRORS) console.error(err.response || err);
+      const info = 'Error getting access token from authorization code';
+      res.status(500).send(info);
+      updatePlugin(info);
+    });
 });
 
 function getAccess(res, cb) {
@@ -82,16 +86,19 @@ function getAccess(res, cb) {
     client_id: CLIENT_ID,
     client_secret: CLIENT_SECRET
   };
-  axios.post('https://accounts.spotify.com/api/token', querystring.stringify(data)).then(response => {
-    ACCESS = response.data.access_token;
-    if (res) res.redirect('/');
-    else if (cb) cb();
-  }).catch(err => {
-    if (ERRORS) console.error(err.response || err);
-    const info = 'Error getting access token from refresh token';
-    if (res) res.status(500).send(info);
-    updatePlugin(info);
-  })
+  axios
+    .post('https://accounts.spotify.com/api/token', querystring.stringify(data))
+    .then(response => {
+      ACCESS = response.data.access_token;
+      if (res) res.redirect('/');
+      else if (cb) cb();
+    })
+    .catch(err => {
+      if (ERRORS) console.error(err.response || err);
+      const info = 'Error getting access token from refresh token';
+      if (res) res.status(500).send(info);
+      updatePlugin(info);
+    });
 }
 
 function trimData(value) {
@@ -104,27 +111,30 @@ function trimData(value) {
 
 function getNowPlaying(res) {
   if (ACCESS) {
-    axios.get('https://api.spotify.com/v1/me/player', {
-      headers: {
-        Authorization: 'Bearer ' + ACCESS
-      }
-    }).then(response => {
-      const data =  response.data;
-      const info = data.is_playing ? `${trimData(data.item.name)} - ${trimData(data.item.artists[0].name)}` : 'Nothing currently playing';
-      updatePlugin(info, data || {});
-      if (res) res.send(`You're all set to go!<br>Currently Playing: ${info}`);
-    }).catch(err => {
-      // Refresh token when expired
-      if (err.response && err.response.status === 401) {
-        console.log('Refreshing access token');
-        getAccess(res, () => getNowPlaying());
-      } else {
-        if (ERRORS) console.error(err.response || err);
-        const info = 'Couldn\'t get currently playing data';
-        updatePlugin(info);
-        if (res) res.status(500).send(info);
-      }
-    });
+    axios
+      .get('https://api.spotify.com/v1/me/player', {
+        headers: {
+          Authorization: 'Bearer ' + ACCESS
+        }
+      })
+      .then(response => {
+        const data = response.data;
+        const info = data.is_playing ? `${trimData(data.item.name)} - ${trimData(data.item.artists[0].name)}` : 'Nothing currently playing';
+        updatePlugin(info, data || {});
+        if (res) res.send(`You're all set to go!<br>Currently Playing: ${info}`);
+      })
+      .catch(err => {
+        // Refresh token when expired
+        if (err.response && err.response.status === 401) {
+          console.log('Refreshing access token');
+          getAccess(res, () => getNowPlaying());
+        } else {
+          if (ERRORS) console.error(err.response || err);
+          const info = "Couldn't get currently playing data";
+          updatePlugin(info);
+          if (res) res.status(500).send(info);
+        }
+      });
   } else if (REFRESH) {
     console.log('Getting access token');
     getAccess(res, () => getNowPlaying());
@@ -149,7 +159,7 @@ function updatePlugin(info, data) {
           file = info;
         }
         // Fix issues with & character
-        file = file.replace(/&/g,'+');
+        file = file.replace(/&/g, '+');
 
         fs.writeFileSync(path.resolve(__dirname, 'data/spotify'), file);
         break;
@@ -159,13 +169,16 @@ function updatePlugin(info, data) {
           info = info.replace('Æ', 'AE');
           info = info.replace(' - Edit', '');
           info = info.replace(' - Original Mix', '');
-          info = info.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+          info = info.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 
           if (info !== lastData) {
             console.log(info);
-            axios.post('http://192.168.1.110/song?song=' + info).catch(err => {
-              console.error(err);
-            });
+            axios
+              .post('http://192.168.1.110/song?song=' + info)
+              .then(res => {
+                axios.post('http://192.168.1.110/color?shift=-1').catch(err => console.error(err));
+              })
+              .catch(err => console.error(err));
           }
 
           lastData = info;
