@@ -170,15 +170,11 @@ function updatePlugin(info, data) {
           info = info.replace(' - Edit', '');
           info = info.replace(' - Original Mix', '');
           info = info.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+          info = encodeURIComponent(info);
 
           if (info !== lastData) {
             console.log(info);
-            axios
-              .post('http://192.168.1.110/song?song=' + info)
-              .then(res => {
-                axios.post('http://192.168.1.110/color?shift=-1').catch(err => console.error(err));
-              })
-              .catch(err => console.error(err));
+            axios.post('http://192.168.1.110/song?song=' + info + '&shift=-1').catch(err => console.error(err));
           }
 
           lastData = info;
