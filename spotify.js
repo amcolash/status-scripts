@@ -174,7 +174,7 @@ function updatePlugin(info, data) {
 
           if (info !== lastData) {
             console.log(info);
-            axios.post('http://192.168.1.110/song?song=' + info + '&shift=-1').catch(err => console.error(err));
+            axios.post('http://home.amcolash.com/spectrum/song?song=' + info + '&shift=-1').catch(err => console.error(err));
           }
 
           lastData = info;
