@@ -46,7 +46,7 @@ app.get('/login', (req, res) => {
         response_type: 'code',
         client_id: CLIENT_ID,
         scope: scope,
-        redirect_uri: REDIRECT
+        redirect_uri: REDIRECT,
       })
   );
 });
@@ -59,7 +59,7 @@ app.get('/callback', (req, res) => {
     redirect_uri: REDIRECT,
     grant_type: 'authorization_code',
     client_id: CLIENT_ID,
-    client_secret: CLIENT_SECRET
+    client_secret: CLIENT_SECRET,
   };
 
   axios
@@ -84,7 +84,7 @@ function getAccess(res, cb) {
     grant_type: 'refresh_token',
     refresh_token: REFRESH,
     client_id: CLIENT_ID,
-    client_secret: CLIENT_SECRET
+    client_secret: CLIENT_SECRET,
   };
   axios
     .post('https://accounts.spotify.com/api/token', querystring.stringify(data))
@@ -114,8 +114,8 @@ function getNowPlaying(res) {
     axios
       .get('https://api.spotify.com/v1/me/player', {
         headers: {
-          Authorization: 'Bearer ' + ACCESS
-        }
+          Authorization: 'Bearer ' + ACCESS,
+        },
       })
       .then(response => {
         const data = response.data;
@@ -167,6 +167,7 @@ function updatePlugin(info, data) {
         if (data && data.is_playing) {
           // Clean up data and fix some characters that don't have support on the led spectrum
           info = info.replace('Æ', 'AE');
+          info = info.replace('Ø', 'O');
           info = info.replace(' - Edit', '');
           info = info.replace(' - Original Mix', '');
           info = info.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
