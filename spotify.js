@@ -182,6 +182,7 @@ function updatePlugin(info, data) {
         }
         break;
       default:
+        if (data && !data.is_playing) info = ' ';
         console.log(info);
         fs.writeFileSync(path.resolve(__dirname, 'data/spotify'), info);
         break;

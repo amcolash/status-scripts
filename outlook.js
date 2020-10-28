@@ -162,7 +162,9 @@ function getEvents(res) {
                 e.start.isBefore(now.clone().add(3, 'd')) &&
                 e.showAs === 'busy' &&
                 e.subject.toLowerCase().indexOf('standup') === -1 &&
-                e.subject.toLowerCase().indexOf('triage') === -1
+                e.subject.toLowerCase().indexOf('triage') === -1 &&
+                e.subject.toLowerCase().indexOf('no meetings') === -1 &&
+                e.subject.toLowerCase().indexOf('meeting-free') === -1
               ) {
                 next = e;
                 return true;
@@ -265,6 +267,7 @@ function updatePlugin(info, data) {
         fs.writeFileSync(path.resolve(__dirname, 'data/outlook'), file);
         break;
       default:
+        if (info === 'No Upcoming Events') info = ' ';
         console.log(info);
         fs.writeFileSync(path.resolve(__dirname, 'data/outlook'), info);
         break;
