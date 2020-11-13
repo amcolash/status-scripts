@@ -22,6 +22,8 @@ const REDIRECT = `http://localhost:${PORT}/callback`;
 const scopes = 'offline_access calendars.read';
 const ERRORS = true;
 
+const TZ = process.env.TZ || "Pacific Standard Time";
+
 const app = express();
 app.listen(PORT);
 console.log(`Listening on ${PORT}`);
@@ -125,7 +127,7 @@ function getEvents(res) {
           return axios.get(`https://graph.microsoft.com/v1.0/me/calendars/${calendar.id}/calendarview?` + querystring.stringify(data), {
             headers: {
               Authorization: 'Bearer ' + ACCESS,
-              Prefer: 'outlook.timezone="Pacific Standard Time"'
+              Prefer: `outlook.timezone="${TZ}"`
             }
           });
         });
@@ -162,7 +164,9 @@ function getEvents(res) {
                 e.start.isBefore(now.clone().add(3, 'd')) &&
                 e.showAs === 'busy' &&
                 e.subject.toLowerCase().indexOf('standup') === -1 &&
-                e.subject.toLowerCase().indexOf('triage') === -1
+                e.subject.toLowerCase().indexOf('triage') === -1 &&
+                e.subject.toLowerCase().indexOf('meeting-free') === -1 &&
+                e.subject.toLowerCase().indexOf('no meetings') === -1
               ) {
                 next = e;
                 return true;
@@ -211,7 +215,7 @@ function truncateEvent(title, max) {
 }
 
 function padTime(time) {
-  if (time.length === 6) return time.padStart(8, ' ');
+  //if (time.length === 6) return time.padStart(8, ' ');
   return time;
 }
 
