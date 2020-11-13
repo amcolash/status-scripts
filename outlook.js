@@ -17,7 +17,7 @@ const store = new FileStore(path.resolve(__dirname, 'data/outlook_token.json'));
 const CLIENT_ID = process.env.MICROSOFT_CLIENT_ID;
 const CLIENT_SECRET = process.env.MICROSOFT_CLIENT_SECRET;
 const PLUGIN = process.env.PLUGIN;
-const PORT = process.env.PORT || 9002;
+const PORT = process.env.OUTLOOK_PORT || 9002;
 const REDIRECT = `http://localhost:${PORT}/callback`;
 const scopes = 'offline_access calendars.read';
 const ERRORS = true;
@@ -269,6 +269,7 @@ function updatePlugin(info, data) {
         fs.writeFileSync(path.resolve(__dirname, 'data/outlook'), file);
         break;
       default:
+        if (info === 'No Upcoming Events') info = ' ';
         console.log(info);
         fs.writeFileSync(path.resolve(__dirname, 'data/outlook'), info);
         break;
