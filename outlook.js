@@ -17,10 +17,12 @@ const store = new FileStore(path.resolve(__dirname, 'data/outlook_token.json'));
 const CLIENT_ID = process.env.MICROSOFT_CLIENT_ID;
 const CLIENT_SECRET = process.env.MICROSOFT_CLIENT_SECRET;
 const PLUGIN = process.env.PLUGIN;
-const PORT = process.env.PORT || 9002;
+const PORT = process.env.OUTLOOK_PORT || 9002;
 const REDIRECT = `http://localhost:${PORT}/callback`;
 const scopes = 'offline_access calendars.read';
 const ERRORS = true;
+
+const TIMEZONE = process.env.TIMEZONE || 'Pacific Standard Time';
 
 const app = express();
 app.listen(PORT);
@@ -44,7 +46,7 @@ app.get('/login', (req, res) => {
         response_type: 'code',
         client_id: CLIENT_ID,
         scope: scopes,
-        redirect_uri: REDIRECT
+        redirect_uri: REDIRECT,
       })
   );
 });
@@ -59,19 +61,19 @@ app.get('/callback', (req, res) => {
     grant_type: 'authorization_code',
     scope: scopes,
     client_id: CLIENT_ID,
-    client_secret: CLIENT_SECRET
+    client_secret: CLIENT_SECRET,
   };
 
   axios
     .post('https://login.microsoftonline.com/common/oauth2/v2.0/token', querystring.stringify(data))
-    .then(response => {
+    .then((response) => {
       ACCESS = response.data.access_token;
       REFRESH = response.data.refresh_token;
       store.set('microsoftRefresh', REFRESH);
 
       res.redirect('/');
     })
-    .catch(err => {
+    .catch((err) => {
       if (ERRORS) console.error(err.response || err);
       const info = 'Error getting access token from authorization code';
       res.status(500).send(info);
@@ -85,16 +87,16 @@ function getAccess(res, cb) {
     refresh_token: REFRESH,
     scope: scopes,
     client_id: CLIENT_ID,
-    client_secret: CLIENT_SECRET
+    client_secret: CLIENT_SECRET,
   };
   axios
     .post('https://login.microsoftonline.com/common/oauth2/v2.0/token', querystring.stringify(data))
-    .then(response => {
+    .then((response) => {
       ACCESS = response.data.access_token;
       if (res) res.redirect('/');
       else if (cb) cb();
     })
-    .catch(err => {
+    .catch((err) => {
       if (ERRORS) console.error(err.response || err);
       const info = 'Error getting access token from refresh token';
       if (res) res.status(500).send(info);
@@ -107,10 +109,10 @@ function getEvents(res) {
     axios
       .get('https://graph.microsoft.com/v1.0/me/calendars', {
         headers: {
-          Authorization: 'Bearer ' + ACCESS
-        }
+          Authorization: 'Bearer ' + ACCESS,
+        },
       })
-      .then(response => {
+      .then((response) => {
         const now = moment();
         const start = moment().startOf('d');
         const end = start.clone().add(7, 'd');
@@ -118,28 +120,28 @@ function getEvents(res) {
         const data = {
           startdatetime: start.toISOString(),
           enddatetime: end.toISOString(),
-          $top: 50 // 50 items per page
+          $top: 50, // 50 items per page
         };
 
-        let p = response.data.value.map(calendar => {
+        let p = response.data.value.map((calendar) => {
           return axios.get(`https://graph.microsoft.com/v1.0/me/calendars/${calendar.id}/calendarview?` + querystring.stringify(data), {
             headers: {
               Authorization: 'Bearer ' + ACCESS,
-              Prefer: 'outlook.timezone="Pacific Standard Time"'
-            }
+              Prefer: `outlook.timezone="${TIMEZONE}"`,
+            },
           });
         });
 
         axios
           .all(p)
-          .then(data => {
+          .then((data) => {
             let events = [];
-            data.forEach(c => {
-              c.data.value.forEach(e => {
+            data.forEach((c) => {
+              c.data.value.forEach((e) => {
                 events.push({
                   ...e,
                   start: moment(e.start.dateTime),
-                  end: moment(e.end.dateTime)
+                  end: moment(e.end.dateTime),
                 });
               });
             });
@@ -150,19 +152,18 @@ function getEvents(res) {
             });
 
             let next;
-            events.some(e => {
+            events.some((e) => {
               // .some allows for short-circuit
               // if the event hasn't quite started and has been accepted
               // and will happen within 3 days
               if (
-                e.start
-                  .clone()
-                  .add(5, 'm')
-                  .isAfter(now) &&
+                e.start.clone().add(5, 'm').isAfter(now) &&
                 e.start.isBefore(now.clone().add(3, 'd')) &&
                 e.showAs === 'busy' &&
                 e.subject.toLowerCase().indexOf('standup') === -1 &&
-                e.subject.toLowerCase().indexOf('triage') === -1
+                e.subject.toLowerCase().indexOf('triage') === -1 &&
+                e.subject.toLowerCase().indexOf('meeting-free') === -1 &&
+                e.subject.toLowerCase().indexOf('no meetings') === -1
               ) {
                 next = e;
                 return true;
@@ -175,11 +176,11 @@ function getEvents(res) {
             if (res) res.send(info);
             updatePlugin(info, events);
           })
-          .catch(err => {
+          .catch((err) => {
             if (ERRORS) console.error(err.response || err);
           });
       })
-      .catch(err => {
+      .catch((err) => {
         // Refresh token when expired
         if (err.response && err.response.status === 401) {
           console.log('Refreshing access token');
@@ -211,7 +212,7 @@ function truncateEvent(title, max) {
 }
 
 function padTime(time) {
-  if (time.length === 6) return time.padStart(8, ' ');
+  //if (time.length === 6) return time.padStart(8, ' ');
   return time;
 }
 
@@ -223,14 +224,12 @@ function updatePlugin(info, data) {
         if (data) {
           const startDay = moment().startOf('d');
           const endDay = moment().endOf('d');
-          const tomorrow = moment()
-            .add(1, 'd')
-            .endOf('d');
+          const tomorrow = moment().add(1, 'd').endOf('d');
           let tooltip = '';
           let count = 0;
           let separator = false;
           let maxLength = 0;
-          data.forEach(e => {
+          data.forEach((e) => {
             if (e.subject.indexOf('Cenceled') === -1) {
               if (e.start.isBetween(startDay, endDay)) {
                 const text = `${padTime(e.start.format('h:mma'))} - ${padTime(e.end.format('h:mma'))}: ${truncateEvent(e.subject, 50)}\n`;
@@ -265,6 +264,7 @@ function updatePlugin(info, data) {
         fs.writeFileSync(path.resolve(__dirname, 'data/outlook'), file);
         break;
       default:
+        if (info === 'No Upcoming Events') info = ' ';
         console.log(info);
         fs.writeFileSync(path.resolve(__dirname, 'data/outlook'), info);
         break;
