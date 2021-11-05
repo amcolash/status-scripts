@@ -8,8 +8,7 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ./data:/usr/src/app/data/
-    ports:
-      - 9001:9001
+    network_mode: 'host'
     entrypoint: node /usr/src/app/spotify.js
     env_file:
       - .env
