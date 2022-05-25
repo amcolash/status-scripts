@@ -20,7 +20,8 @@ const CLIENT_ID = process.env.SPOTIFY_CLIENT_ID;
 const CLIENT_SECRET = process.env.SPOTIFY_CLIENT_SECRET;
 const PLUGIN = process.env.PLUGIN;
 const PORT = process.env.SPOTIFY_PORT || 9001;
-const REDIRECT = `http://localhost:${PORT}/callback`;
+const IP = process.env.IP || 'localhost';
+const REDIRECT = `http://${IP}:${PORT}/callback`;
 const ERRORS = true;
 
 const app = express();
@@ -64,14 +65,14 @@ app.get('/callback', (req, res) => {
 
   axios
     .post('https://accounts.spotify.com/api/token', querystring.stringify(data))
-    .then(response => {
+    .then((response) => {
       ACCESS = response.data.access_token;
       REFRESH = response.data.refresh_token;
       store.set('spotifyRefresh', REFRESH);
 
       res.redirect('/');
     })
-    .catch(err => {
+    .catch((err) => {
       if (ERRORS) console.error(err.response || err);
       const info = 'Error getting access token from authorization code';
       res.status(500).send(info);
@@ -88,12 +89,12 @@ function getAccess(res, cb) {
   };
   axios
     .post('https://accounts.spotify.com/api/token', querystring.stringify(data))
-    .then(response => {
+    .then((response) => {
       ACCESS = response.data.access_token;
       if (res) res.redirect('/');
       else if (cb) cb();
     })
-    .catch(err => {
+    .catch((err) => {
       if (ERRORS) console.error(err.response || err);
       const info = 'Error getting access token from refresh token';
       if (res) res.status(500).send(info);
@@ -117,13 +118,13 @@ function getNowPlaying(res) {
           Authorization: 'Bearer ' + ACCESS,
         },
       })
-      .then(response => {
+      .then((response) => {
         const data = response.data;
         const info = data.is_playing ? `${trimData(data.item.name)} - ${trimData(data.item.artists[0].name)}` : 'Nothing currently playing';
         updatePlugin(info, data || {});
         if (res) res.send(`You're all set to go!<br>Currently Playing: ${info}`);
       })
-      .catch(err => {
+      .catch((err) => {
         // Refresh token when expired
         if (err.response && err.response.status === 401) {
           console.log('Refreshing access token');
@@ -175,7 +176,7 @@ function updatePlugin(info, data) {
 
           if (info !== lastData) {
             console.log(info);
-            axios.post('https://home.amcolash.com:9090/spectrum/song?song=' + info + '&shift=-1').catch(err => console.error(err));
+            axios.post('https://home.amcolash.com:9090/spectrum/song?song=' + info + '&shift=-1').catch((err) => console.error(err));
           }
 
           lastData = info;
