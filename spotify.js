@@ -180,6 +180,8 @@ function updatePlugin(info, data) {
           }
 
           lastData = info;
+        } else {
+          console.log(info);
         }
         break;
       default:
